@@ -1,0 +1,6 @@
+This is an inert text fixture used to demonstrate a YARA rule match.
+
+Example command text:
+powershell.exe -WindowStyle Hidden -Command "Write-Output 'YARA Scout demo'"
+
+This file is documentation-like text and is not intended to be executed.

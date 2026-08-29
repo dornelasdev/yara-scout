@@ -1,0 +1,4 @@
+This is a harmless project note.
+
+The YARA Scout scanner can inspect files and summarize matching rules. This file
+does not contain the combined command patterns used by the demonstration rule.
