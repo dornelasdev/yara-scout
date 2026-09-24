@@ -130,6 +130,8 @@ See [JSON report format](docs/json-report.md) for the schema and privacy model.
 
 ```text
 rules/
+├── eicar_test_file.yar
+├── pdf_embedded_actions.yar
 └── suspicious_powershell.yar
 fixtures/
 ├── positive/
@@ -138,9 +140,11 @@ fixtures/
     └── ordinary_note.txt
 ```
 
-The positive fixture contains command-like text intended to match the example
-rule. The negative fixture provides a known clean result. A YARA match indicates
-that a rule condition was satisfied; it does not by itself prove maliciousness.
+The starter rule pack covers suspicious PowerShell behavior, PDF active-content
+indicators, and the canonical EICAR antivirus test file. The current positive
+fixture contains inert command-like text intended to match the PowerShell rule;
+the negative fixture provides a known clean result. A YARA match indicates that
+a rule condition was satisfied; it does not by itself prove maliciousness.
 
 ## Rule development
 
