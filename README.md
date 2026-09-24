@@ -5,9 +5,7 @@ to files, records useful metadata, and produces terminal or JSON findings. It is
 intended for analysts, students, and rule authors who want a small, transparent
 file-triage workflow.
 
-The project is building toward `v0.1.0`. Its planned core scanning and reporting
-features are implemented; release tagging and publication have not been
-performed.
+The current `v0.1.0` release provides the core scanning and reporting workflow.
 
 ## Features
 
@@ -143,6 +141,13 @@ fixtures/
 The positive fixture contains command-like text intended to match the example
 rule. The negative fixture provides a known clean result. A YARA match indicates
 that a rule condition was satisfied; it does not by itself prove maliciousness.
+
+## Rule development
+
+First-party rules follow the project [rule-authoring convention](docs/rule-authoring.md),
+which defines naming, metadata, attribution, detection, and review expectations.
+The existing demonstration rule will be aligned with this convention as the
+curated starter rule pack is developed.
 
 ## Project structure
 
