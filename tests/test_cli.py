@@ -56,13 +56,14 @@ def test_scan_connects_scanner_and_terminal_reporter() -> None:
     assert result.exit_code == 0
     assert "[MATCH]" in result.output
     assert "Suspicious_PowerShell_Patterns" in result.output
+    assert "PDF_Embedded_Actions" in result.output
     assert "[CLEAN]" in result.output
-    assert "Files scanned: 2" in result.output
-    assert "Matched files: 1" in result.output
-    assert "Clean files: 1" in result.output
+    assert "Files scanned: 5" in result.output
+    assert "Matched files: 2" in result.output
+    assert "Clean files: 3" in result.output
 
 
-def test_scan_matches_only_hides_the_clean_fixture() -> None:
+def test_scan_matches_only_hides_clean_fixtures() -> None:
     result = runner.invoke(
         app,
         [
@@ -76,8 +77,9 @@ def test_scan_matches_only_hides_the_clean_fixture() -> None:
 
     assert result.exit_code == 0
     assert "Suspicious_PowerShell_Patterns" in result.output
+    assert "PDF_Embedded_Actions" in result.output
     assert "ordinary_note.txt" not in result.output
-    assert "Clean files: 1" in result.output
+    assert "Clean files: 3" in result.output
 
 
 def test_scan_exits_one_when_a_file_cannot_be_scanned(tmp_path, monkeypatch) -> None:
@@ -146,12 +148,17 @@ def test_scan_writes_a_complete_json_report(tmp_path) -> None:
     report = json.loads(report_path.read_text())
     assert report["scan"]["target"] == "$TARGET"
     assert report["scan"]["path_mode"] == "relative"
-    assert report["summary"]["files_scanned"] == 2
+    assert report["summary"]["files_scanned"] == 5
+    assert report["summary"]["matched_files"] == 2
+    assert report["summary"]["clean_files"] == 3
     assert {item["status"] for item in report["results"]} == {
         "clean",
         "matched",
     }
     assert {item["path"] for item in report["results"]} == {
+        "negative/benign_document.pdf",
+        "negative/benign_powershell.txt",
         "negative/ordinary_note.txt",
+        "positive/pdf_embedded_actions.pdf",
         "positive/suspicious_powershell.txt",
     }

@@ -135,23 +135,29 @@ rules/
 └── suspicious_powershell.yar
 fixtures/
 ├── positive/
+│   ├── pdf_embedded_actions.pdf
 │   └── suspicious_powershell.txt
 └── negative/
+    ├── benign_document.pdf
+    ├── benign_powershell.txt
     └── ordinary_note.txt
 ```
 
 The starter rule pack covers suspicious PowerShell behavior, PDF active-content
-indicators, and the canonical EICAR antivirus test file. The current positive
-fixture contains inert command-like text intended to match the PowerShell rule;
-the negative fixture provides a known clean result. A YARA match indicates that
-a rule condition was satisfied; it does not by itself prove maliciousness.
+indicators, and the canonical EICAR antivirus test file. The committed fixtures
+are inert text or PDF-like content that exercise positive and negative rule
+boundaries. The EICAR payload is not stored in the repository; its test creates
+the canonical 68 bytes inside pytest's temporary directory and may therefore be
+noticed or blocked by local antivirus software while the test runs.
+
+A YARA match indicates that a rule condition was satisfied; it does not by
+itself prove maliciousness.
 
 ## Rule development
 
 First-party rules follow the project [rule-authoring convention](docs/rule-authoring.md),
 which defines naming, metadata, attribution, detection, and review expectations.
-The existing demonstration rule will be aligned with this convention as the
-curated starter rule pack is developed.
+Each rule in the curated starter pack follows this convention.
 
 ## Project structure
 
@@ -174,8 +180,9 @@ Run the test suite from the activated project environment:
 pytest
 ```
 
-Tests create harmless temporary rules and files. Repository fixtures provide an
-additional end-to-end contract for the example rule.
+Tests create safe temporary rules and files. Repository fixtures provide an
+additional end-to-end contract for the starter rule pack. The EICAR test payload
+is non-malicious but is specifically designed to trigger antivirus products.
 
 ## Limitations
 

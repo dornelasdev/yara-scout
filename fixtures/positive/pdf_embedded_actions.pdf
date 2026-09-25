@@ -1,0 +1,9 @@
+%PDF-1.7
+% Inert YARA Scout fixture; this file is not intended to be opened as a document.
+1 0 obj
+<< /Type /Catalog /OpenAction 2 0 R >>
+endobj
+2 0 obj
+<< /S /JavaScript /JS (YARA Scout fixture) >>
+endobj
+%%EOF

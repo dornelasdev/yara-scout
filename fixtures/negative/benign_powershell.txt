@@ -1,0 +1,6 @@
+This is an inert boundary fixture containing an ordinary command.
+
+powershell.exe -NoProfile -Command "Get-Date"
+
+It does not combine PowerShell with the suspicious execution indicators required
+by the rule.
