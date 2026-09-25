@@ -1,6 +1,6 @@
 [project]
 name = "yara-scout"
-version = "0.1.0"
+version = "0.1.1"
 description = "Safe, structured file triage with YARA rules"
 readme = "README.md"
 license = "MIT"

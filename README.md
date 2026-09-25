@@ -5,7 +5,9 @@ to files, records useful metadata, and produces terminal or JSON findings. It is
 intended for analysts, students, and rule authors who want a small, transparent
 file-triage workflow.
 
-The current `v0.1.0` release provides the core scanning and reporting workflow.
+The current `v0.1.1` release provides the core scanning and reporting workflow,
+a curated starter rule pack, safe rule fixtures, and authoring-convention
+validation.
 
 ## Features
 
@@ -220,7 +222,7 @@ is non-malicious but is specifically designed to trigger antivirus products.
 - Convention validation depends on Plyara's support for the rule syntax while
   `yara-python` remains authoritative for compilation.
 - Automatic rule downloads, threat-intelligence integrations, web interfaces,
-  and persistent storage are outside the `v0.1.0` scope.
+  and persistent storage are outside the `v0.1.1` scope.
 
 ## License
 

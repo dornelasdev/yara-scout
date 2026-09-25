@@ -26,7 +26,7 @@ def test_version_displays_the_project_version() -> None:
     result = runner.invoke(app, ["--version"])
 
     assert result.exit_code == 0
-    assert result.output.strip() == "0.1.0"
+    assert result.output.strip() == "0.1.1"
 
 
 def test_scan_help_describes_its_inputs() -> None:
