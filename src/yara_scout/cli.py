@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Iterator
 from importlib.metadata import version
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 import yara
@@ -11,6 +11,10 @@ from rich.text import Text
 from yara_scout.models import ScanResult
 from yara_scout.reporting import JsonReporter, TerminalReporter
 from yara_scout.scanner import DEFAULT_MAX_FILE_SIZE, DEFAULT_TIMEOUT, Scanner
+
+
+if TYPE_CHECKING:
+    from yara_scout.validation import ValidationReport
 
 
 app = typer.Typer(
@@ -35,6 +39,44 @@ def capture_results(
     for result in results:
         captured.append(result)
         yield result
+
+
+def validation_path(path: Path, report: "ValidationReport") -> str:
+    """Return a concise path relative to the validated rule root."""
+    if report.rule_path.is_file():
+        return path.name
+    try:
+        return path.relative_to(report.rule_path).as_posix()
+    except ValueError:
+        return path.name
+
+
+def print_validation_report(
+    report: "ValidationReport",
+    console: Console,
+) -> None:
+    """Render validation findings and their aggregate counts."""
+    for finding in report.findings:
+        location = validation_path(finding.path, report)
+        if finding.line is not None:
+            location = f"{location}:{finding.line}"
+
+        message = Text("[INVALID] ", style="bold red")
+        message.append(location)
+        if finding.rule is not None:
+            message.append(f" ({finding.rule})")
+        message.append(f": {finding.message}")
+        console.print(message)
+
+    status = "passed" if report.valid else "failed"
+    style = "bold green" if report.valid else "bold red"
+    summary = Text(f"Validation {status}: ", style=style)
+    summary.append(
+        f"{report.files_checked} file(s), "
+        f"{report.rules_checked} rule(s), "
+        f"{len(report.findings)} finding(s)."
+    )
+    console.print(summary)
 
 
 @app.callback()
@@ -162,4 +204,32 @@ def scan(
             raise typer.Exit(code=2) from error
 
     if summary.errors:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def validate(
+    rules: Annotated[
+        Path,
+        typer.Argument(
+            help="YARA rule file or directory to validate.",
+            resolve_path=False,
+        ),
+    ],
+) -> None:
+    """Compile rules and check the YARA Scout authoring convention."""
+    from yara_scout.validation import RuleValidator
+
+    console = Console()
+
+    try:
+        report = RuleValidator().validate(rules)
+    except (OSError, ValueError) as error:
+        message = Text("Unable to start validation: ", style="bold red")
+        message.append(str(error))
+        Console(stderr=True).print(message)
+        raise typer.Exit(code=2) from error
+
+    print_validation_report(report, console)
+    if not report.valid:
         raise typer.Exit(code=1)

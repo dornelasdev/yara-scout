@@ -11,6 +11,7 @@ The current `v0.1.0` release provides the core scanning and reporting workflow.
 
 - Scan one file or recursively scan a directory.
 - Compile one rule file or a directory of `.yar` and `.yara` files.
+- Validate rule compilation and the YARA Scout authoring convention.
 - Calculate SHA-256 and collect file size information.
 - Detect common file signatures with MIME extension fallback.
 - Report YARA rule names, namespaces, tags, and metadata.
@@ -59,6 +60,8 @@ live malware.
 
 ## Command reference
 
+### Scan
+
 ```console
 yara-scout scan TARGET --rules PATH [OPTIONS]
 ```
@@ -92,13 +95,35 @@ yara-scout scan samples -r rules -t 5 -s 50
 yara-scout scan samples -r rules -L
 ```
 
-### Exit codes
+#### Scan exit codes
 
 | Code | Meaning |
 | --- | --- |
 | `0` | The scan completed without file errors. Matches and policy skips are valid results. |
 | `1` | The scan completed, but one or more files produced an error. |
 | `2` | Arguments, rule compilation, discovery, or JSON output prevented complete operation. |
+
+### Validate
+
+Compile a rule file or directory and check its objective authoring requirements:
+
+```console
+yara-scout validate RULES
+```
+
+Validation checks supported filenames, rule identifiers, lowercase tags,
+required metadata, controlled values, ISO dates, and unique rule IDs and names.
+Every discovered rule file is checked so that one failure does not hide findings
+in other files. Detection quality and false-positive analysis remain human review
+responsibilities.
+
+#### Validation exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Every discovered rule compiled and passed convention checks. |
+| `1` | One or more compilation or convention findings were reported. |
+| `2` | Validation could not start, such as for a missing path or empty rule directory. |
 
 ## Safety behavior
 
@@ -167,7 +192,8 @@ src/yara_scout/
 ├── filetypes.py    # Hybrid file-signature and extension detection
 ├── models.py       # Structured findings and match records
 ├── reporting.py    # Terminal and JSON report generation
-└── scanner.py      # Rule compilation, discovery, hashing, and matching
+├── scanner.py      # Rule compilation, discovery, hashing, and matching
+└── validation.py   # Rule compilation and authoring-convention checks
 ```
 
 See [architecture](docs/architecture.md) for component boundaries and data flow.
@@ -191,6 +217,8 @@ is non-malicious but is specifically designed to trigger antivirus products.
 - MIME detection is best-effort and supports a limited built-in signature set.
 - YARA matches can include false positives and false negatives.
 - JSON export retains scan results in memory until the report is written.
+- Convention validation depends on Plyara's support for the rule syntax while
+  `yara-python` remains authoritative for compilation.
 - Automatic rule downloads, threat-intelligence integrations, web interfaces,
   and persistent storage are outside the `v0.1.0` scope.
 

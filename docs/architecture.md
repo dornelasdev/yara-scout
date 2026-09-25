@@ -8,7 +8,9 @@ the surrounding triage workflow.
 
 ```mermaid
 flowchart LR
-    CLI[CLI input] --> Scanner
+    CLI[CLI input] --> Scan[scan command]
+    CLI --> Validate[validate command]
+    Scan --> Scanner
     Scanner --> Discovery[File discovery and safety policy]
     Discovery --> Type[File-type detection]
     Discovery --> Hash[SHA-256 hashing]
@@ -18,12 +20,22 @@ flowchart LR
     YARA --> Result
     Result --> Terminal[TerminalReporter]
     Result --> JSON[JsonReporter]
+    Validate --> Validator[RuleValidator]
+    Validator --> Compile[YARA compilation]
+    Validator --> Parse[Plyara structure parsing]
+    Compile --> Findings[ValidationReport]
+    Parse --> Findings
+    Findings --> ValidationTerminal[Terminal output]
 ```
 
 The scanner compiles the selected rule collection once. Its `scan()` method then
 yields one `ScanResult` for each discovered file. Terminal reporting consumes
 those results as they arrive. When JSON output is requested, the CLI retains the
 same streamed results and writes the complete report afterward.
+
+The validator checks each rule with the same YARA engine used for scanning, then
+uses Plyara to inspect rule names, tags, and metadata. It returns all objective
+convention findings together rather than stopping after the first invalid file.
 
 ## Components
 
@@ -46,6 +58,17 @@ matching.
 
 The `Scanner` instance retains compiled rules and safety settings. Scan results
 are yielded rather than accumulated inside the scanner.
+
+### Validator
+
+`validation.py` owns rule discovery, authoritative compilation through
+`yara-python`, structural parsing through Plyara, and objective convention
+checks. `ValidationReport` and `ValidationFinding` keep that logic independent
+from terminal formatting.
+
+Compilation and parsing are intentionally separate. A rule must compile before
+its convention is inspected, and parser compatibility failures are reported
+separately from YARA syntax failures.
 
 ### File-type detector
 
@@ -90,5 +113,9 @@ discovery failures prevent the operation from completing. Individual file
 failures are recorded and scanning continues with the next discovered file.
 Policy skips are expected outcomes rather than failures.
 
+Validation startup failures return immediately. Once validation begins,
+compilation and convention findings are collected across the discovered rule
+files and produce validation exit code `1`.
+
 The resulting process codes are documented in the
-[README](../README.md#exit-codes).
+[README command reference](../README.md#command-reference).

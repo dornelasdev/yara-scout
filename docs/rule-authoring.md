@@ -15,6 +15,8 @@ Detection behavior belongs in the `strings` and `condition` sections.
   `suspicious_powershell.yar`.
 - Give rules descriptive identifiers with words separated by underscores, such
   as `Suspicious_PowerShell_Encoded_Command`.
+- Start each underscore-separated word with a capital letter or preserve a
+  familiar acronym such as `PDF` or `EICAR`.
 - Preserve familiar capitalization in product and technology names.
 - Use lowercase tags for broad, searchable context such as platform, technology,
   or technique: `windows powershell execution`.
@@ -111,3 +113,17 @@ Before adding or changing a rule, verify that:
 - safe positive and negative fixtures cover the intended boundary;
 - expected false positives are documented; and
 - the complete rule collection still compiles together.
+
+## Automated validation
+
+Run the project validator against one rule file or a complete collection:
+
+```console
+yara-scout validate rules/
+```
+
+The command uses `yara-python` for authoritative compilation and Plyara for
+structural inspection. It enforces objective parts of this convention, including
+names, tags, metadata fields and values, dates, and collection-wide uniqueness.
+Condition quality, reference accuracy, and false-positive analysis still require
+human review.

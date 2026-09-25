@@ -19,6 +19,7 @@ def test_help_describes_the_application() -> None:
     assert result.exit_code == 0
     assert "Inspect files with YARA rules" in result.output
     assert "scan" in result.output
+    assert "validate" in result.output
 
 
 def test_version_displays_the_project_version() -> None:
@@ -162,3 +163,33 @@ def test_scan_writes_a_complete_json_report(tmp_path) -> None:
         "positive/pdf_embedded_actions.pdf",
         "positive/suspicious_powershell.txt",
     }
+
+
+def test_validate_accepts_the_starter_rule_pack() -> None:
+    result = runner.invoke(app, ["validate", str(RULES)])
+
+    assert result.exit_code == 0
+    assert "Validation passed" in result.output
+    assert "3 file(s), 3 rule(s), 0 finding(s)" in result.output
+
+
+def test_validate_exits_one_for_convention_findings(tmp_path: Path) -> None:
+    rule_file = tmp_path / "missing_metadata.yar"
+    rule_file.write_text("rule Missing_Metadata { condition: true }")
+
+    result = runner.invoke(app, ["validate", str(rule_file)])
+    normalized_output = " ".join(result.output.split())
+
+    assert result.exit_code == 1
+    assert "[INVALID]" in result.output
+    assert "Missing required metadata field: id" in normalized_output
+    assert "Validation failed" in result.output
+
+
+def test_validate_exits_two_when_rule_path_is_missing(tmp_path: Path) -> None:
+    missing_path = tmp_path / "missing"
+
+    result = runner.invoke(app, ["validate", str(missing_path)])
+
+    assert result.exit_code == 2
+    assert "Unable to start validation" in result.output

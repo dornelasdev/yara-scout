@@ -69,6 +69,15 @@ wheels = [
 ]
 
 [[package]]
+name = "plyara"
+version = "2.2.8"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/4b/0441fb4595df522053c1899ed3280d0bb3b8bc3fa1de415b87ec3537ec62/plyara-2.2.8.tar.gz", hash = "sha256:ce6a5be6bdc172f78bb10d2e220409c76bd46b3da9ff43e53bbe84d1eede9700", size = 68720, upload-time = "2025-02-06T21:06:24.093Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/62/10ecb9f3d6a5e620e3ae496a048838697a7113ccace02cb360f24015b065/plyara-2.2.8-py3-none-any.whl", hash = "sha256:8b2a3b46c0963976010a69d3ddd280a77dcd6cf1097408ff573b5af5df04d06d", size = 55187, upload-time = "2025-02-06T21:06:21.311Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
@@ -131,31 +140,6 @@ wheels = [
 ]
 
 [[package]]
-name = "yara-scout"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "rich" },
-    { name = "typer" },
-    { name = "yara-python" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "rich", specifier = ">=13,<15" },
-    { name = "typer", specifier = ">=0.12,<1" },
-    { name = "yara-python", specifier = ">=4.5,<5" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8,<10" }]
-
-[[package]]
 name = "yara-python"
 version = "4.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -186,3 +170,30 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/37/e8f2b9a2287070f39fa6a5afbcf1ed6762f60ab3b1fb08018732838ccc25/yara_python-4.5.4-cp313-cp313-win32.whl", hash = "sha256:7707b144c8fcdb30c069ea57b94799cd7601f694ba01b696bbd1832721f37fd0", size = 1447395, upload-time = "2025-05-27T14:15:25.237Z" },
     { url = "https://files.pythonhosted.org/packages/cc/a0/40b0291c8b24d13daf0e26538c9f3a0d843c38c6446dd17f36335bdd5b5f/yara_python-4.5.4-cp313-cp313-win_amd64.whl", hash = "sha256:5f1288448991d63c1f6351c9f6d112916b0177ceefaa27d1419427a6ff09f829", size = 1825779, upload-time = "2025-05-27T14:15:26.802Z" },
 ]
+
+[[package]]
+name = "yara-scout"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "plyara" },
+    { name = "rich" },
+    { name = "typer" },
+    { name = "yara-python" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "plyara", specifier = ">=2.2,<3" },
+    { name = "rich", specifier = ">=13,<15" },
+    { name = "typer", specifier = ">=0.12,<1" },
+    { name = "yara-python", specifier = ">=4.5,<5" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8,<10" }]
