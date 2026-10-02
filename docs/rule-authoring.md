@@ -127,3 +127,20 @@ structural inspection. It enforces objective parts of this convention, including
 names, tags, metadata fields and values, dates, and collection-wide uniqueness.
 Condition quality, reference accuracy, and false-positive analysis still require
 human review.
+
+### Included rule files
+
+An entry file may use `include "relative/path.yar"` to compose a rule collection.
+Validation follows nested includes relative to the declaring file, checks each
+resolved source path once, and checks IDs and identifiers across the inspected
+sources. Files containing only include directives do not need rule metadata.
+Included rule declarations still require all metadata fields, and included
+filenames must follow the same `.yar`/`.yara` naming convention. Other extensions
+produce a naming finding but do not prevent inspection of their metadata.
+
+Validate the entry file when dependencies need declarations from that entry.
+Passing a directory selects every discovered rule file as an independent
+compilation entry, matching the scanner's directory behavior. YARA reports
+missing includes, cycles, and compilation errors; Plyara failures are reported
+against the source that could not be inspected. Dependencies are inspected only
+after their entry compiles successfully.

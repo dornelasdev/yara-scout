@@ -193,3 +193,34 @@ def test_validate_exits_two_when_rule_path_is_missing(tmp_path: Path) -> None:
 
     assert result.exit_code == 2
     assert "Unable to start validation" in result.output
+
+
+def test_validate_reports_nested_include_source_path(tmp_path: Path) -> None:
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "helper.yar").write_text(
+        "rule Missing_Metadata { condition: true }", encoding="utf-8"
+    )
+    entry = tmp_path / "entry.yar"
+    entry.write_text('include "nested/helper.yar"\n', encoding="utf-8")
+
+    result = runner.invoke(app, ["validate", str(entry)])
+    output = " ".join(result.output.split())
+
+    assert result.exit_code == 1
+    assert "nested/helper.yar:1" in output
+    assert "Missing_Metadata" in output
+    assert "Missing required metadata field: id" in output
+    assert "2 file(s), 1 rule(s)" in output
+
+
+def test_validate_exits_one_for_missing_include(tmp_path: Path) -> None:
+    entry = tmp_path / "entry.yar"
+    entry.write_text('include "missing.yar"\n', encoding="utf-8")
+
+    result = runner.invoke(app, ["validate", str(entry)])
+    output = " ".join(result.output.split())
+
+    assert result.exit_code == 1
+    assert "YARA compilation failed:" in output
+    assert "Validation failed" in output

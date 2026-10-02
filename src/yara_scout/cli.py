@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Iterator
 from importlib.metadata import version
+from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -43,12 +44,14 @@ def capture_results(
 
 def validation_path(path: Path, report: "ValidationReport") -> str:
     """Return a concise path relative to the validated rule root."""
-    if report.rule_path.is_file():
-        return path.name
+    root = report.rule_path
+    if root.is_file():
+        root = root.parent
     try:
-        return path.relative_to(report.rule_path).as_posix()
+        return Path(relpath(path, root)).as_posix()
     except ValueError:
-        return path.name
+        # Windows paths on different drives cannot be made relative.
+        return path.as_posix()
 
 
 def print_validation_report(

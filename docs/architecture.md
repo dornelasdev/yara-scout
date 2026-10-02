@@ -70,6 +70,20 @@ Compilation and parsing are intentionally separate. A rule must compile before
 its convention is inspected, and parser compatibility failures are reported
 separately from YARA syntax failures.
 
+Each selected entry compiles with its includes in context. After successful
+compilation, an iterative traversal follows Plyara's include paths and checks
+metadata in every reachable source. Resolved paths deduplicate shared sources;
+findings retain each declaration's source path and line number. Include-only
+wrappers are allowed. YARA compilation detects missing dependencies and cycles.
+File counts include selected entries and additional inspected dependencies;
+rule counts include declarations actually inspected.
+
+Directory input retains the scanner's entry selection: all discovered `.yar`
+and `.yara` files compile independently and then together in separate namespaces.
+Single-file input compiles just that entry and inspects dependencies without
+requiring independent compilation. A failed entry does not prevent other entries
+from being checked, but its dependencies may remain uninspected.
+
 ### File-type detector
 
 `filetypes.py` checks known signatures for PE, ELF, PDF, ZIP, PNG, JPEG, and

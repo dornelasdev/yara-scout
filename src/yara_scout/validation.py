@@ -1,6 +1,7 @@
 """Compilation and convention validation for YARA rule collections."""
 
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -86,20 +87,10 @@ class RuleValidator:
         identities_by_id: dict[str, _RuleIdentity] = {}
         identities_by_name: dict[str, _RuleIdentity] = {}
         rules_checked = 0
-        compiled_files = 0
+        compiled_files: list[Path] = []
+        inspected: set[Path] = set()
 
         for path in rule_files:
-            if not FILE_NAME_PATTERN.fullmatch(path.name):
-                findings.append(
-                    ValidationFinding(
-                        path=path,
-                        message=(
-                            "Filename must use lowercase words separated by "
-                            "underscores"
-                        ),
-                    )
-                )
-
             try:
                 yara.compile(filepath=str(path))
             except yara.Error as error:
@@ -111,22 +102,10 @@ class RuleValidator:
                 )
                 continue
 
-            compiled_files += 1
-            parsed_rules, parse_finding = self._parse_file(path)
-            if parse_finding is not None:
-                findings.append(parse_finding)
-                continue
+            compiled_files.append(path)
 
-            if not parsed_rules:
-                findings.append(
-                    ValidationFinding(
-                        path=path,
-                        message="No rule declarations were found",
-                    )
-                )
-                continue
-
-            for parsed_rule in parsed_rules:
+        for entry in compiled_files:
+            for path, parsed_rule in self._parse_tree(entry, inspected, findings):
                 rules_checked += 1
                 rule_findings, rule_id, identity = self._validate_rule(
                     path,
@@ -168,7 +147,7 @@ class RuleValidator:
                             )
                         )
 
-        if compiled_files == len(rule_files) and len(rule_files) > 1:
+        if len(compiled_files) == len(rule_files) and len(rule_files) > 1:
             collection_files = {
                 f"rule_file_{index}": str(path)
                 for index, path in enumerate(rule_files)
@@ -185,7 +164,7 @@ class RuleValidator:
 
         return ValidationReport(
             rule_path=resolved_path,
-            files_checked=len(rule_files),
+            files_checked=len(set(rule_files) | inspected),
             rules_checked=rules_checked,
             findings=tuple(findings),
         )
@@ -209,7 +188,7 @@ class RuleValidator:
 
         rule_files = sorted(
             (
-                path
+                path.resolve()
                 for path in rule_path.rglob("*")
                 if path.is_file() and path.suffix.lower() in RULE_EXTENSIONS
             ),
@@ -217,29 +196,76 @@ class RuleValidator:
         )
         if not rule_files:
             raise ValueError(f"No YARA rule files found in: {rule_path}")
-        return rule_files
+        return list(dict.fromkeys(rule_files))
+
+    def _parse_tree(
+        self,
+        entry: Path,
+        inspected: set[Path],
+        findings: list[ValidationFinding],
+    ) -> Iterator[tuple[Path, dict[str, Any]]]:
+        """Inspect each source once after its entry has compiled successfully."""
+        pending = [entry]
+        while pending:
+            path = pending.pop().resolve()
+            if path in inspected:
+                continue
+            inspected.add(path)
+
+            if not FILE_NAME_PATTERN.fullmatch(path.name):
+                findings.append(
+                    ValidationFinding(
+                        path=path,
+                        message=(
+                            "Filename must use lowercase words separated by "
+                            "underscores and end in .yar or .yara"
+                        ),
+                    )
+                )
+
+            parsed_rules, includes, parse_finding = self._parse_file(path)
+            if parse_finding is not None:
+                findings.append(parse_finding)
+                continue
+
+            if not parsed_rules and not includes:
+                findings.append(
+                    ValidationFinding(
+                        path=path,
+                        message="No rule declarations were found",
+                    )
+                )
+
+            for parsed_rule in parsed_rules:
+                yield path, parsed_rule
+
+            # Reverse the stack additions to visit includes in source order.
+            # Absolute includes remain absolute; relative ones use this file.
+            pending.extend(path.parent / include for include in reversed(includes))
 
     @staticmethod
     def _parse_file(
         path: Path,
-    ) -> tuple[list[dict[str, Any]], ValidationFinding | None]:
+    ) -> tuple[list[dict[str, Any]], list[str], ValidationFinding | None]:
         try:
             source = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
-            return [], ValidationFinding(
+            return [], [], ValidationFinding(
                 path=path,
                 message=f"Unable to read rule source as UTF-8: {error}",
             )
 
         try:
-            parsed_rules = plyara.Plyara().parse_string(source)
+            parser = plyara.Plyara()
+            parsed_rules = parser.parse_string(source)
         except (ParseTypeError, ParseValueError) as error:
-            return [], ValidationFinding(
+            return [], [], ValidationFinding(
                 path=path,
                 message=f"Plyara could not parse rule structure: {error}",
             )
 
-        return parsed_rules, None
+        # The parser retains includes even when the source is only a wrapper.
+        return parsed_rules, list(parser.includes), None
 
     def _validate_rule(
         self,

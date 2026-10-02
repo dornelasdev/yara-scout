@@ -119,12 +119,31 @@ Every discovered rule file is checked so that one failure does not hide findings
 in other files. Detection quality and false-positive analysis remain human review
 responsibilities.
 
+Includes are inspected recursively, resolving each path relative to its declaring
+file. Shared sources are checked once, and findings identify the included source
+file. Include-only entry files are supported. Dependencies may be outside the
+selected directory; they are still checked against the same convention.
+
+For rules that depend on declarations in an entry file, validate that entry:
+
+```console
+yara-scout validate rules/entry.yar
+```
+
+Directory validation, like directory scanning, treats every discovered `.yar`
+or `.yara` file as an independent compilation entry. Single-file validation
+compiles its dependencies only in that entry's context. Missing includes and
+cycles produce compilation findings. Metadata inspection requires successful
+entry compilation, so a compilation failure can leave its dependencies unchecked.
+The summary counts selected entry files plus additional inspected source files
+(deduplicated by resolved path), and rule declarations actually inspected.
+
 #### Validation exit codes
 
 | Code | Meaning |
 | --- | --- |
 | `0` | Every discovered rule compiled and passed convention checks. |
-| `1` | One or more compilation or convention findings were reported. |
+| `1` | One or more compilation, parsing, source-reading, or convention findings were reported. |
 | `2` | Validation could not start, such as for a missing path or empty rule directory. |
 
 ## Safety behavior
