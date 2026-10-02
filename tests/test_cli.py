@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+from rich.text import Text
 from typer.testing import CliRunner
 
 from yara_scout.cli import app
@@ -15,11 +17,12 @@ FIXTURES = PROJECT_ROOT / "fixtures"
 
 def test_help_describes_the_application() -> None:
     result = runner.invoke(app, ["--help"])
+    output = Text.from_ansi(result.output).plain
 
     assert result.exit_code == 0
-    assert "Inspect files with YARA rules" in result.output
-    assert "scan" in result.output
-    assert "validate" in result.output
+    assert "Inspect files with YARA rules" in output
+    assert "scan" in output
+    assert "validate" in output
 
 
 def test_version_displays_the_project_version() -> None:
@@ -29,23 +32,30 @@ def test_version_displays_the_project_version() -> None:
     assert result.output.strip() == "0.1.1"
 
 
-def test_scan_help_describes_its_inputs() -> None:
+@pytest.mark.parametrize("force_terminal", [False, True], ids=["plain", "styled"])
+def test_scan_help_describes_its_inputs(
+    monkeypatch: pytest.MonkeyPatch, force_terminal: bool,
+) -> None:
+    # Typer enables terminal styling on GitHub Actions even in captured output.
+    monkeypatch.setattr("typer.rich_utils.FORCE_TERMINAL", force_terminal)
+    monkeypatch.setattr("typer.rich_utils.MAX_WIDTH", 100)
     result = runner.invoke(app, ["scan", "--help"])
+    output = Text.from_ansi(result.output).plain
 
     assert result.exit_code == 0
-    assert "target" in result.output
-    assert "--rules" in result.output
-    assert "--matches-only" in result.output
-    assert "-m" in result.output
-    assert "--timeout" in result.output
-    assert "-t" in result.output
-    assert "--max-file-size-mb" in result.output
-    assert "-s" in result.output
-    assert "--follow-symlinks" in result.output
-    assert "-L" in result.output
-    assert "--json" in result.output
-    assert "-j" in result.output
-    assert "File or directory to scan" in result.output
+    assert "target" in output
+    assert "--rules" in output
+    assert "--matches-only" in output
+    assert "-m" in output
+    assert "--timeout" in output
+    assert "-t" in output
+    assert "--max-file-size-mb" in output
+    assert "-s" in output
+    assert "--follow-symlinks" in output
+    assert "-L" in output
+    assert "--json" in output
+    assert "-j" in output
+    assert "File or directory to scan" in output
 
 
 def test_scan_connects_scanner_and_terminal_reporter() -> None:
