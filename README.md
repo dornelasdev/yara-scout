@@ -212,6 +212,12 @@ Tests create safe temporary rules and files. Repository fixtures provide an
 additional end-to-end contract for the starter rule pack. The EICAR test payload
 is non-malicious but is specifically designed to trigger antivirus products.
 
+GitHub Actions runs the [CI workflow](.github/workflows/ci.yml) on pushes and
+pull requests. It uses Ubuntu and Python 3.12, installs dependencies from
+`uv.lock` with `uv sync --locked --dev`, runs pytest, and validates the starter
+rule pack. A stale lockfile fails the installation step instead of being updated
+automatically. Check the repository's **Actions** tab for results and logs.
+
 ## Limitations
 
 - Scans regular files on disk; process and memory scanning are not supported.
